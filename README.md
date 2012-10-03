@@ -3,6 +3,8 @@ Loader.js : 0.3 : 2012/04/12
 ----------------------------------------------------
 https://github.com/mudcube/Loader.js
 ----------------------------------------------------
+Demo can be seen used in: http://mudcu.be/piano/
+----------------------------------------------------
 var loader = new widgets.Loader({ message: "loading: New loading message..." });
 ----------------------------------------------------
 var loader = new widgets.Loader({
