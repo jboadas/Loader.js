@@ -9,7 +9,22 @@
 <script type="text/javascript">
 
 var loader;
+var messageWithProgress = function(message, increment) {
+	/// Create a new loader progress, tie this into onProgress event.
+	var progress = 0;
+	/// return the loaderId to be able to remove it.
+	return loader.add({
+		message: message, 
+		getProgress: function() {
+			return progress += increment;
+		}
+	});
+};
+
 window.onload = function() {
+	var progress0 = 0;
+	var progress1 = 0;
+	var progress2 = 0;
 	loader = new widgets.Loader({
 		id: "loader",
 		bars: 12,
@@ -17,15 +32,28 @@ window.onload = function() {
 		lineWidth: 20,
 		lineHeight: 70,
 		background: "rgba(0,0,0,0.5)",
-		message: "loading...",
-		callback: function() {
-			// call function once loader has started	
+		timeout: 30, // in seconds
+		oncomplete: function() {
+			console.log("done!");
+		},
+		onstart: function() {
+			// call some function once loader has started
 		}
 	});
+
+	/// Add a message with progress.
+	var a = messageWithProgress('test 1', 1);
+	/// Remove this message manually... (or you could wait for it to finish)
+	loader.remove(a);
+
+	/// Like these two ones...
+	var b = messageWithProgress('test 2', 2);
+	var c = messageWithProgress('test 3', 3);
 };
 
 </script>
-<input value="stop loader" type="button" onclick="loader.stop()" style="font-size: 1em">
-<input value="new message" type="button" onclick="loader.message('new loading message...')" style="font-size: 1em">
+<input value="stop loader" type="button" onclick="loader.stop()" style="font-size: 1em"><br>
+<input value="new message" type="button" onclick="loader.message('loading...');" style="font-size: 1em"><br>
+<input value="new message w/ progress" type="button" onclick="messageWithProgress('test', 2)" style="font-size: 1em">
 </body>
 </html>
