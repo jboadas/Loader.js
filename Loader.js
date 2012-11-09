@@ -272,11 +272,11 @@ widgets.Loader = function (configure) {
 		for (var key in that.messages) {
 			var item = that.messages[key];
 			var nid = iteration / 0.07 >> 0;
-			if (item.timestamp && timestamp - item.timestamp > item.timeout) {
-				that.remove(item.seed);
-				continue;
-			}
 			if (item.getProgress) {
+				if (item.timeout && item.timestamp && timestamp - item.timestamp > item.timeout) {
+					that.remove(item.seed);
+					continue;
+				}
 				var progress = item.getProgress();
 				if (progress >= 100) {
 					that.remove(item.seed);
