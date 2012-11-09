@@ -257,8 +257,6 @@ widgets.Loader = function (configure) {
 			item.container.parentNode.removeChild(item.container);
 		};
 	};
-	var updateCSS = function () {
-	};
 	var renderAnimation = function () {
 		var windowSize = getWindowSize(configure.container);
 		var width = windowSize.width - size;
