@@ -125,7 +125,7 @@ widgets.Loader = function (configure) {
 	ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
 
 	/// Public functions.
-	this.messages = [];
+	this.messages = {};
 	this.message = function (message, onstart) {
 		if (!this.interval) return this.start(onstart, message);
 		return this.add({
@@ -153,11 +153,11 @@ widgets.Loader = function (configure) {
 		canvas.style.top = (height / 2) + "px";
 		///
 		var timestamp = (new Date()).getTime();
-		var seed = timestamp * Math.random() >> 0;
+		var seed = Math.abs(timestamp * Math.random() >> 0);
 		var message = conf.message;
 		///
 		var container = document.createElement("div");
-		container.style.cssText = "-webkit-transition-duration: 650ms";
+		container.style.cssText = "-webkit-transition-duration: 500ms";
 		var span = document.createElement("span");
 		span.style.cssText = "float: right";
 		var node = document.createElement("span");
@@ -166,8 +166,7 @@ widgets.Loader = function (configure) {
 		container.appendChild(node);
 		container.appendChild(span);
 		///
-		var item = {
-			id: this.messages.length,
+		var item = this.messages[seed] = {
 			seed: seed,
 			container: container,
 			element: node,
@@ -177,7 +176,6 @@ widgets.Loader = function (configure) {
 			timestamp: timestamp,
 			getProgress: conf.getProgress
 		};
-		this.messages.push(item);
 		this.span.appendChild(container);
 		this.span.style.display = "block";
 		///
@@ -200,25 +198,21 @@ widgets.Loader = function (configure) {
 	};
 	
 	this.remove = function (seed) {
+		var timestamp = (new Date()).getTime();
 		if (typeof(seed) === "object") seed = seed.join(":");
 		if (seed) seed = ":" + seed + ":";
-		var messages = [];
 		/// Remove element.
-		for (var n = 0, length = this.messages.length; n < length; n ++) {
-			var item = this.messages[n];
+		for (var key in this.messages) {
+			var item = this.messages[key];
 			if (!seed || seed.indexOf(":" + item.seed + ":") !== -1) {
-				delete this.messages[item.id];
-				window.setTimeout(function() { item.container.style.opacity = 0; }, 1);
+				delete this.messages[item.seed];
 				item.container.style.color = "#99ff88";
-				window.setTimeout(removeChild(item), 650)
+				removeChild(item);
 				if (item.getProgress) item.span.innerHTML = "100%";
-			} else {
-				messages.push(item);
 			}
 		}
-		/// Update the array indexes.
-		this.messages = messages;
 	};
+	
 	this.start = function (onstart, message) {
 		if (!(message || configure.message)) return;
 		return this.add({
@@ -226,6 +220,7 @@ widgets.Loader = function (configure) {
 			onstart: onstart
 		});
 	};
+	
 	this.stop = function () {
 		this.remove();
 		window.clearInterval(this.interval);
@@ -253,9 +248,12 @@ widgets.Loader = function (configure) {
 	document.head.appendChild(style);
 	/// Private functions.
 	var removeChild = function(item) {
-		return function() {
+		window.setTimeout(function() { // timeout in case within same event loop.
+			item.container.style.opacity = 0;
+		}, 1);
+		window.setTimeout(function() { // wait for opacity=0 before removing the element.
 			item.container.parentNode.removeChild(item.container);
-		};
+		}, 250);
 	};
 	var renderAnimation = function () {
 		var windowSize = getWindowSize(configure.container);
@@ -271,28 +269,31 @@ widgets.Loader = function (configure) {
 		var height = windowSize.height - size;
 		that.span.style.left = ((width + size) / 2 - that.span.offsetWidth / 2) + "px";
 		that.span.style.top = (height / 2 + size - 10) + "px";
-		if (that.messages.length) {
-			for (var n = 0; n < that.messages.length; n ++) {
-				var item = that.messages[n];
-				var nid = iteration / 0.07 >> 0;
-				if (item.timestamp && timestamp - item.timestamp > item.timeout) {
-					return that.remove(item.seed);
+		for (var key in that.messages) {
+			var item = that.messages[key];
+			var nid = iteration / 0.07 >> 0;
+			if (item.timestamp && timestamp - item.timestamp > item.timeout) {
+				that.remove(item.seed);
+				continue;
+			}
+			if (item.getProgress) {
+				var progress = item.getProgress();
+				if (progress >= 100) {
+					that.remove(item.seed);
+					continue;
 				}
-				if (item.getProgress) {
-					var progress = item.getProgress();
-					if (progress >= 100) return that.remove(item.seed);
-					item.span.innerHTML = progress + "%";
-				}
-				if (nid % 10 === 0) {
-					if (item.messageAnimate) {
-							var length = item.messageAnimate.length;
-							var n = nid / 10 % length;
-							var text = item._message + item.messageAnimate[n];
-							item.element.innerHTML = text;
-					}
+				item.span.innerHTML = (progress >> 0) + "%";
+			}
+			if (nid % 10 === 0) {
+				if (item.messageAnimate) {
+						var length = item.messageAnimate.length;
+						var n = nid / 10 % length;
+						var text = item._message + item.messageAnimate[n];
+						item.element.innerHTML = text;
 				}
 			}
-		} else {
+		}
+		if (!key) {
 			that.stop();
 		}
 		//
