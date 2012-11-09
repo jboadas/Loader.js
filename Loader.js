@@ -4,8 +4,10 @@
 	----------------------------------------------------
 	https://github.com/mudcube/Loader.js
 	----------------------------------------------------
-	var loader = new widgets.Loader({ message: "loading: New loading message..." });
-	----------------------------------------------------
+	/// Simple setup.
+	var loader = new widgets.Loader;
+	
+	/// More complex setup.
 	var loader = new widgets.Loader({
 		id: "loader",
 		bars: 12,
@@ -15,7 +17,6 @@
 		timeout: 30, // maximum timeout in seconds.
 		background: "rgba(0,0,0,0.5)",
 		container: document.body,
-		message: "loading...",
 		oncomplete: function() {
 			// call function once loader has completed
 		},
@@ -23,11 +24,23 @@
 			// call function once loader has started	
 		}
 	});
-	loader.remove();
-	----------------------------------------------------
-	loader.message("loading: New loading message...", function() {
-		// call function once loader has started	
+	
+	/// Add a new message to the queue.
+	var loaderId = loader.add({
+		message: "test",
+		getProgress: function() { // sends progress to loader.js
+			return progress; // value between 1-100
+		}
 	});
+	
+	/// Remove a specific loader message.
+	loader.remove(loaderId); 
+	
+	/// Recenter the loader within container (run onresize)
+	loader.center(); 
+	
+	/// Stop all loader instances.
+	loader.stop(); 
 */
 
 if (typeof (widgets) === "undefined") var widgets = {};
@@ -36,6 +49,7 @@ if (typeof (widgets) === "undefined") var widgets = {};
 
 var PI = Math.PI;
 var noCanvas = !document.createElement("canvas").getContext;
+var fadeOutSpeed = 400;
 var defaultConfig = {
 	id: "loader",
 	bars: 12,
@@ -44,26 +58,6 @@ var defaultConfig = {
 	lineHeight: 70,
 	timeout: 0,
 	display: true
-};
-
-var getWindowSize = function (element) {
-	if (window.innerWidth && window.innerHeight) {
-		var width = window.innerWidth;
-		var height = window.innerHeight;
-	} else if (document.compatMode === "CSS1Compat" && document.documentElement && document.documentElement.offsetWidth) {
-		var width = document.documentElement.offsetWidth;
-		var height = document.documentElement.offsetHeight;
-	} else if (document.body && document.body.offsetWidth) {
-		var width = document.body.offsetWidth;
-		var height = document.body.offsetHeight;
-	}
-	if (element) {
-		var width = element.offsetWidth;
-	}
-	return {
-		width: width,
-		height: height
-	};
 };
 
 widgets.Loader = function (configure) {
@@ -84,15 +78,15 @@ widgets.Loader = function (configure) {
 
 	/// Setup element
 	var canvas = document.getElementById(configure.id);
-	var timeout = 1;
 	if (!canvas) {
 		var div = document.createElement("div");
 		var span = document.createElement("span");
 		span.className = "message";
 		div.appendChild(span);
 		div.className = defaultConfig.id;
-		that.span = span;
-		that.div = div;
+		div.style.cssText = transitionCSS("opacity", fadeOutSpeed);
+		this.span = span;
+		this.div = div;
 		var canvas = document.createElement("canvas");
 		document.body.appendChild(canvas);
 		canvas.id = configure.id;
@@ -100,7 +94,7 @@ widgets.Loader = function (configure) {
 		div.appendChild(canvas);
 		configure.container.appendChild(div);
 	} else {
-		that.span = canvas.parentNode.getElementsByTagName("span")[0];
+		this.span = canvas.parentNode.getElementsByTagName("span")[0];
 	}
 
 	/// Configure
@@ -137,7 +131,7 @@ widgets.Loader = function (configure) {
 	this.add = function (conf) {
 		var background = configure.background ? configure.background : "rgba(0,0,0,0.65)";
 		this.span.style.cssText = "background: " + background + ";";
-		this.div.style.cssText = transitionCSS("opacity", timeout);
+		this.div.style.cssText = transitionCSS("opacity", fadeOutSpeed);
 		if (this.stopPropagation) {
 			this.div.style.cssText += "background: rgba(0,0,0,0.25);";
 		} else {
@@ -191,9 +185,13 @@ widgets.Loader = function (configure) {
 			window.setTimeout(conf.onstart, 50);
 		}
 		///
-		if (!conf.delay) renderAnimation();
-		window.clearInterval(this.interval);
-		this.interval = window.setInterval(renderAnimation, 30);
+		this.center();
+		///
+		if (!this.interval) {
+			if (!conf.delay) renderAnimation();
+			window.clearInterval(this.interval);
+			this.interval = window.setInterval(renderAnimation, 30);
+		}
 		///
 		return seed;
 	};
@@ -229,14 +227,31 @@ widgets.Loader = function (configure) {
 		if (configure.oncomplete) configure.oncomplete();
 		if (canvas && canvas.style) {
 			div.style.cssText += "pointer-events: none;";
-			canvas.parentNode.style.opacity = 0;
+			window.setTimeout(function() {
+				that.div.style.opacity = 0;
+			}, 1);
 			window.setTimeout(function () {
 				if (that.interval) return;
 				that.stopPropagation = false;
 				canvas.parentNode.style.display = "none";
 				ctx.clearRect(0, 0, size, size);
-			}, timeout * 1000);
+			}, fadeOutSpeed * 1000);
 		}
+	};
+
+	this.center = function() {
+		var windowSize = getWindowSize(configure.container);
+		var width = windowSize.width - size;
+		var height = windowSize.height - size;
+		/// Center the animation within the content.
+		canvas.style.left = (width / 2) + "px";
+		canvas.style.top = (height / 2) + "px";
+		/// Center the message within the content.
+		var windowSize = getWindowSize(configure.container);
+		var width = windowSize.width - size;
+		var height = windowSize.height - size;
+		that.span.style.left = ((width + size) / 2 - that.span.offsetWidth / 2) + "px";
+		that.span.style.top = (height / 2 + size - 10) + "px";
 	};
 
 	var style = document.createElement("style");
@@ -248,17 +263,6 @@ widgets.Loader = function (configure) {
 ';
 	document.head.appendChild(style);
 	/// Private functions.
-	var transitionCSS = function(type, ms) {
-		return '\
-			-webkit-transition-property: '+type+';\
-			-webkit-transition-duration: '+ms+'ms;\
-			-moz-transition-property: '+type+';\
-			-moz-transition-duration: '+ms+'ms;\
-			-o-transition-property: '+type+';\
-			-o-transition-duration: '+ms+'ms;\
-			-ms-transition-property: '+type+';\
-			-ms-transition-duration: '+ms+'ms;';
-	};
 	var removeChild = function(item) {
 		window.setTimeout(function() { // timeout in case within same event loop.
 			item.container.style.opacity = 0;
@@ -268,19 +272,7 @@ widgets.Loader = function (configure) {
 		}, 250);
 	};
 	var renderAnimation = function () {
-		var windowSize = getWindowSize(configure.container);
-		var width = windowSize.width - size;
-		var height = windowSize.height - size;
-		/// Center the animation within the content.
-		canvas.style.left = (width / 2) + "px";
-		canvas.style.top = (height / 2) + "px";
-		/// Center the message within the content.
 		var timestamp = (new Date()).getTime();
-		var windowSize = getWindowSize(configure.container);
-		var width = windowSize.width - size;
-		var height = windowSize.height - size;
-		that.span.style.left = ((width + size) / 2 - that.span.offsetWidth / 2) + "px";
-		that.span.style.top = (height / 2 + size - 10) + "px";
 		for (var key in that.messages) {
 			var item = that.messages[key];
 			var nid = iteration / 0.07 >> 0;
@@ -350,6 +342,40 @@ widgets.Loader = function (configure) {
 	this.start();
 	//
 	return this;
+};
+
+////
+
+var transitionCSS = function(type, ms) {
+	return '\
+		-webkit-transition-property: '+type+';\
+		-webkit-transition-duration: '+ms+'ms;\
+		-moz-transition-property: '+type+';\
+		-moz-transition-duration: '+ms+'ms;\
+		-o-transition-property: '+type+';\
+		-o-transition-duration: '+ms+'ms;\
+		-ms-transition-property: '+type+';\
+		-ms-transition-duration: '+ms+'ms;';
+};
+
+var getWindowSize = function (element) {
+	if (window.innerWidth && window.innerHeight) {
+		var width = window.innerWidth;
+		var height = window.innerHeight;
+	} else if (document.compatMode === "CSS1Compat" && document.documentElement && document.documentElement.offsetWidth) {
+		var width = document.documentElement.offsetWidth;
+		var height = document.documentElement.offsetHeight;
+	} else if (document.body && document.body.offsetWidth) {
+		var width = document.body.offsetWidth;
+		var height = document.body.offsetHeight;
+	}
+	if (element) {
+		var width = element.offsetWidth;
+	}
+	return {
+		width: width,
+		height: height
+	};
 };
 
 })();
