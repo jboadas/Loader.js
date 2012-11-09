@@ -208,7 +208,7 @@ widgets.Loader = function (configure) {
 			var item = this.messages[n];
 			if (!seed || seed.indexOf(":" + item.seed + ":") !== -1) {
 				delete this.messages[item.id];
-				item.container.style.opacity = 0;
+				window.setTimeout(function() { item.container.style.opacity = 0; }, 1);
 				item.container.style.color = "#99ff88";
 				window.setTimeout(removeChild(item), 650)
 				if (item.getProgress) item.span.innerHTML = "100%";
@@ -247,7 +247,7 @@ widgets.Loader = function (configure) {
 	style.innerHTML = '\
 .loader { color: #fff; -webkit-transition-property: opacity; position: fixed; left: 0; top: 0; width: 100%; height: 100%; z-index: 100000; opacity: 0; display: none; }\
 .loader span.message { font-family: monospace; font-size: 14px; opacity: 1; display: none; border-radius: 10px; padding: 0px; width: 200px; text-align: center; position: absolute; z-index: 10000; }\
-.loader span.message div { border-bottom: 1px solid #555; padding: 10px 10px; clear: both; text-align: left; opacity: 1; -webkit-transition-property: opacity; }\
+.loader span.message div { border-bottom: 1px solid #555; padding: 5px 10px; clear: both; text-align: left; opacity: 1; -webkit-transition-property: opacity; }\
 .loader span.message div:last-child { border-bottom: none; }\
 ';
 	document.head.appendChild(style);
