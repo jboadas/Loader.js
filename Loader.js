@@ -133,10 +133,11 @@ widgets.Loader = function (configure) {
 			onstart: onstart
 		});
 	};
+	
 	this.add = function (conf) {
 		var background = configure.background ? configure.background : "rgba(0,0,0,0.65)";
 		this.span.style.cssText = "background: " + background + ";";
-		this.div.style.cssText = "-webkit-transition-duration: " + timeout + "s;";
+		this.div.style.cssText = transitionCSS("opacity", timeout);
 		if (this.stopPropagation) {
 			this.div.style.cssText += "background: rgba(0,0,0,0.25);";
 		} else {
@@ -157,7 +158,7 @@ widgets.Loader = function (configure) {
 		var message = conf.message;
 		///
 		var container = document.createElement("div");
-		container.style.cssText = "-webkit-transition-duration: 500ms";
+		container.style.cssText = transitionCSS("opacity", 500);
 		var span = document.createElement("span");
 		span.style.cssText = "float: right";
 		var node = document.createElement("span");
@@ -240,13 +241,24 @@ widgets.Loader = function (configure) {
 
 	var style = document.createElement("style");
 	style.innerHTML = '\
-.loader { color: #fff; -webkit-transition-property: opacity; position: fixed; left: 0; top: 0; width: 100%; height: 100%; z-index: 100000; opacity: 0; display: none; }\
+.loader { color: #fff; position: fixed; left: 0; top: 0; width: 100%; height: 100%; z-index: 100000; opacity: 0; display: none; }\
 .loader span.message { font-family: monospace; font-size: 14px; opacity: 1; display: none; border-radius: 10px; padding: 0px; width: 200px; text-align: center; position: absolute; z-index: 10000; }\
-.loader span.message div { border-bottom: 1px solid #555; padding: 5px 10px; clear: both; text-align: left; opacity: 1; -webkit-transition-property: opacity; }\
+.loader span.message div { border-bottom: 1px solid #555; padding: 5px 10px; clear: both; text-align: left; opacity: 1; }\
 .loader span.message div:last-child { border-bottom: none; }\
 ';
 	document.head.appendChild(style);
 	/// Private functions.
+	var transitionCSS = function(type, ms) {
+		return '\
+			-webkit-transition-property: '+type+';\
+			-webkit-transition-duration: '+ms+'ms;\
+			-moz-transition-property: '+type+';\
+			-moz-transition-duration: '+ms+'ms;\
+			-o-transition-property: '+type+';\
+			-o-transition-duration: '+ms+'ms;\
+			-ms-transition-property: '+type+';\
+			-ms-transition-duration: '+ms+'ms;';
+	};
 	var removeChild = function(item) {
 		window.setTimeout(function() { // timeout in case within same event loop.
 			item.container.style.opacity = 0;
@@ -272,7 +284,7 @@ widgets.Loader = function (configure) {
 		for (var key in that.messages) {
 			var item = that.messages[key];
 			var nid = iteration / 0.07 >> 0;
-			if (item.getProgress) {
+			if (nid % 5 === 0 && item.getProgress) {
 				if (item.timeout && item.timestamp && timestamp - item.timestamp > item.timeout) {
 					that.remove(item.seed);
 					continue;
