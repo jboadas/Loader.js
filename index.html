@@ -15,7 +15,7 @@ var loader;
 var testId = 0;
 var messageWithProgress = function(message, increment) {
 	/// Setup a random amount of incrementation
-	if (!increment) increment = (Math.random() * 5 >> 0) + 0.5;
+	if (!increment) increment = (Math.random() * 5 >> 0) + 1;
 	/// Create a new loader progress, tie this into onProgress event.
 	var progress = 0;
 	/// return the loaderId to be able to remove it.
@@ -56,16 +56,16 @@ window.onload = function() {
 
 	/// Add some tests before the previous ones complete.
 	window.setTimeout(function() {
-		var c = messageWithProgress('test', 1);
-		var d = messageWithProgress('test', 2);
-		var e = messageWithProgress('test', 3);
-	}, 1000)
+		var c = messageWithProgress('test', 2);
+		var d = messageWithProgress('test', 3);
+		var e = messageWithProgress('test', 4);
+	}, 1000);
 };
 
 </script>
 Fork on <a href="https://github.com/mudcube/Loader.js">Github</a>.<br>
 <input value="stop loader" type="button" onclick="loader.stop()" style="font-size: 1em"><br>
-<input value="new message" type="button" onclick="loader.message('loading...');" style="font-size: 1em"><br>
+<input value="new message" type="button" onclick="loader.message('press stop...');" style="font-size: 1em"><br>
 <input value="new message w/ progress" type="button" onclick="messageWithProgress('test')" style="font-size: 1em">
 </body>
 </html>
