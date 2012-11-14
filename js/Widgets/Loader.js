@@ -106,9 +106,10 @@ widgets.Loader = function (configure) {
 	var windowSize = getWindowSize(configure.container);
 	var width = windowSize.width - size;
 	var height = windowSize.height - size;
+	var deviceRatio = window.devicePixelRatio || 1;
 	///
-	canvas.width = size;
-	canvas.height = size;
+	canvas.width = size * deviceRatio;
+	canvas.height = size  * deviceRatio;
 	///
 	var iteration = 0;
 	var ctx = canvas.getContext("2d");
@@ -138,14 +139,9 @@ widgets.Loader = function (configure) {
 			this.div.style.cssText += "pointer-events: none;";
 		}
 		///
-		var windowSize = getWindowSize(configure.container);
-		var width = windowSize.width - size;
-		var height = windowSize.height - size;
 		canvas.parentNode.style.opacity = 1;
 		canvas.parentNode.style.display = "block";
 		if (configure.background) this.div.style.background = configure.backgrond;
-		canvas.style.left = (width / 2) + "px";
-		canvas.style.top = (height / 2) + "px";
 		///
 		var timestamp = (new Date()).getTime();
 		var seed = Math.abs(timestamp * Math.random() >> 0);
@@ -246,10 +242,9 @@ widgets.Loader = function (configure) {
 		/// Center the animation within the content.
 		canvas.style.left = (width / 2) + "px";
 		canvas.style.top = (height / 2) + "px";
-		/// Center the message within the content.
-		var windowSize = getWindowSize(configure.container);
-		var width = windowSize.width - size;
-		var height = windowSize.height - size;
+		canvas.style.width = (size) + "px";
+		canvas.style.height = (size) + "px";
+		console.log(canvas.width, canvas.style.width)
 		that.span.style.left = ((width + size) / 2 - that.span.offsetWidth / 2) + "px";
 		that.span.style.top = (height / 2 + size - 10) + "px";
 	};
@@ -302,7 +297,8 @@ widgets.Loader = function (configure) {
 		}
 		//
 		ctx.save();
-		ctx.clearRect(0, 0, size, size);
+		ctx.clearRect(0, 0, size * deviceRatio, size * deviceRatio);
+		ctx.scale(deviceRatio, deviceRatio);
 		ctx.translate(size / 2, size / 2);
 		var hues = 360 - 360 / bars;
 		for (var i = 0; i < bars; i++) {
