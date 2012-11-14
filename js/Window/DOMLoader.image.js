@@ -69,6 +69,8 @@ DOMLoader.image = function(config) {
 				break;
 			case 3: // fallback on php proxy
 				if ($vars.host.substr(0, 6) === "chrome") {
+					/// imageToJson from Max Novakovic's getImageData library.
+					//  http://www.maxnov.com/getimagedata/
 					var proxyString = "http://img-to-json.appspot.com/?callback=DOMLoader.imageToJson&url=";
 					DOMLoader.imageToJson = function(response) {
 						image.onload = config.callback;
@@ -146,6 +148,7 @@ DOMLoader.image = function(config) {
 };
 
 DOMLoader.sendRequestBase64 = function(config) {
+	/// "encodeBinary" borrowed from Emil Lerch's article on the subject
 	// http://emilsblog.lerch.org/2009/07/javascript-hacks-using-xhr-to-load.html
 	var _keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
 	var encodeBinary = function (input) {
@@ -197,6 +200,7 @@ DOMLoader.sendRequestBase64 = function(config) {
 		if (!response.responseText) return;
 		var base64 = encodeBinary(response.responseText);
 		if (config.JS64) { // script encoded as base64
+			/// Original method borrowed from Jacob Seiden 
 			// http://www.nihilogic.dk/labs/canvascompress/
 			var file = "data:image/png;base64," + base64
 			var oCanvas = document.createElement("canvas");
@@ -210,12 +214,12 @@ DOMLoader.sendRequestBase64 = function(config) {
 				oCanvas.style.width = iWidth+"px";
 				oCanvas.style.height = iHeight+"px";
 				var oText = document.getElementById("output");
-				oCtx.drawImage(this,0,0);
+				oCtx.drawImage(this, 0, 0);
 				var oData = oCtx.getImageData(0,0,iWidth,iHeight).data;
 				var a = [], len = oData.length, p = -1;
 				for (var i=0;i<len;i+=4) {
 					if (oData[i] > 0) a[++p] = String.fromCharCode(oData[i]);
-				};
+				}
 				var strData = a.join("");
 				callback({ responseText: strData });
 				document.body.removeChild(oImg);

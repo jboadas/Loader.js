@@ -4,8 +4,10 @@
 	DOMLoader.link({
 		href: "./fonts/Ultima.css",
 		fontFamily: "Ultima", // if checking for <canvas>
-		callback: function() { }
+		onload: function() { }
 	});
+	-------
+	TODO: merge in onload code from Canvas Text library.
 */
 
 if (typeof(DOMLoader) === "undefined") var DOMLoader = {};

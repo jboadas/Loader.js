@@ -47,7 +47,8 @@ if (typeof (XMLHttpRequest) === "undefined") {
 }
 
 if (typeof ((new XMLHttpRequest()).responseText) === "undefined") {
-	// http://stackoverflow.com/questions/1919972/how-do-i-access-xhr-responsebody-for-binary-data-from-javascript-in-ie
+	/// Borrowed from Miska Kaipiainen's post on "Internet Explorer and Binary Files Data Access"
+	// http://miskun.com/javascript/internet-explorer-and-binary-files-data-access/
     var IEBinaryToArray_ByteStr_Script =
     "<!-- IEBinaryToArray_ByteStr -->\r\n"+
     "<script type='text/vbscript'>\r\n"+
