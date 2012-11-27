@@ -129,7 +129,24 @@ widgets.Loader = function (configure) {
 		});
 	};
 	
+	this.update = function(id, message, percent) {
+		if (!id) for (var id in this.messages);
+		var item = this.messages[id];
+		item.message = message;
+		if (typeof(percent) === "number") item.span.innerHTML = percent + "%";
+		if (message.substr(-3) === "...") { // animated dots
+			item._message = message.substr(0, message.length - 3);
+			item.messageAnimate = [".&nbsp;&nbsp;", "..&nbsp;", "..."].reverse();
+		} else { // normal
+			item._message = message;
+			item.messageAnimate = false;
+		}
+		///
+		item.element.innerHTML = message;
+	};
+	
 	this.add = function (conf) {
+		if (typeof(conf) === "string") conf = { message: conf };
 		var background = configure.background ? configure.background : "rgba(0,0,0,0.65)";
 		this.span.style.cssText = "background: " + background + ";";
 		this.div.style.cssText = transitionCSS("opacity", fadeOutSpeed);
@@ -150,7 +167,7 @@ widgets.Loader = function (configure) {
 		var container = document.createElement("div");
 		container.style.cssText = transitionCSS("opacity", 500);
 		var span = document.createElement("span");
-		span.style.cssText = "float: right";
+		span.style.cssText = "float: right; width: 50px;";
 		var node = document.createElement("span");
 		node.innerHTML = message;
 		///
@@ -169,14 +186,8 @@ widgets.Loader = function (configure) {
 		};
 		this.span.appendChild(container);
 		this.span.style.display = "block";
-		///
-		if (message.substr(-3) === "...") { // animated dots
-			item._message = message.substr(0, message.length - 3);
-			item.messageAnimate = [".&nbsp;&nbsp;", "..&nbsp;", "..."].reverse();
-		} else { // normal
-			item._message = message;
-			item.messageAnimate = false;
-		}
+		this.update(item.seed, message);
+		/// Escape event loop.
 		if (conf.onstart) {
 			window.setTimeout(conf.onstart, 50);
 		}
@@ -188,11 +199,12 @@ widgets.Loader = function (configure) {
 			window.clearInterval(this.interval);
 			this.interval = window.setInterval(renderAnimation, 30);
 		}
-		///
+		/// Return identifier.
 		return seed;
 	};
 	
 	this.remove = function (seed) {
+		iteration += 0.07;
 		var timestamp = (new Date()).getTime();
 		if (typeof(seed) === "object") seed = seed.join(":");
 		if (seed) seed = ":" + seed + ":";
@@ -244,16 +256,14 @@ widgets.Loader = function (configure) {
 		canvas.style.top = (height / 2) + "px";
 		canvas.style.width = (size) + "px";
 		canvas.style.height = (size) + "px";
-		console.log(canvas.width, canvas.style.width)
-		that.span.style.left = ((width + size) / 2 - that.span.offsetWidth / 2) + "px";
 		that.span.style.top = (height / 2 + size - 10) + "px";
 	};
 
 	var style = document.createElement("style");
 	style.innerHTML = '\
 .loader { color: #fff; position: fixed; left: 0; top: 0; width: 100%; height: 100%; z-index: 100000; opacity: 0; display: none; }\
-.loader span.message { font-family: monospace; font-size: 14px; opacity: 1; display: none; border-radius: 10px; padding: 0px; width: 200px; text-align: center; position: absolute; z-index: 10000; }\
-.loader span.message div { border-bottom: 1px solid #555; padding: 5px 10px; clear: both; text-align: left; opacity: 1; }\
+.loader span.message { font-family: monospace; font-size: 14px; margin: auto; opacity: 1; display: none; border-radius: 10px; padding: 0px; width: 300px; text-align: center; position: absolute; z-index: 10000; left: 0; right: 0; }\
+.loader span.message div { border-bottom: 1px solid #222; padding: 5px 10px; clear: both; text-align: left; opacity: 1; }\
 .loader span.message div:last-child { border-bottom: none; }\
 ';
 	document.head.appendChild(style);
